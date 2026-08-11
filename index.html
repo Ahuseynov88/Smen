@@ -822,11 +822,13 @@ const Ops = {
     const rows = active.map(e=>{
       const mine = DB.assignments.filter(a=>a.employeeId===e.id && a.date < dateISO);
       const recent = mine.filter(a=>a.date >= cutoff);
+      const recentMorning = recent.filter(a=>a.type==='morning').length;
+      const recentEvening = recent.filter(a=>a.type==='evening').length;
       let lastDate=null;
       for(const a of mine){ if(!lastDate || a.date>lastDate) lastDate=a.date; }
       const tsOf = iso => { const {y,m,d}=partsOf(iso); return Date.UTC(y,m-1,d); };
       const daysSince = lastDate ? Math.round((tsOf(dateISO)-tsOf(lastDate))/86400000) : null;
-      return { emp:e, recentCount:recent.length, lastDate, daysSince, total:mine.length };
+      return { emp:e, recentCount:recent.length, recentMorning, recentEvening, lastDate, daysSince, total:mine.length };
     });
     // Az işləyən / çoxdan işləməyən öndə
     rows.sort((a,b)=> a.recentCount-b.recentCount || (b.daysSince||9999)-(a.daysSince||9999) || fullName(a.emp).localeCompare(fullName(b.emp),'az'));
@@ -1224,7 +1226,7 @@ Object.assign(UI,{
         ${avatar(e)}
         <div style="flex:1;min-width:0">
           <div class="an-nm">${esc(fullName(e))} ${hot?'<span class="tag rel">çoxdan işləməyib</span>':''}</div>
-          <div class="an-line" style="margin-top:2px"><span>Son ${windowDays} gündə: <b>${r.recentCount}</b> smen · Son iş: ${lastLabel(r)}</span></div>
+          <div class="an-line" style="margin-top:2px;flex-wrap:wrap"><span><span class="tag morning">🌅 ${r.recentMorning} səhər</span> <span class="tag evening">🌆 ${r.recentEvening} axşam</span> · cəmi <b>${r.recentCount}</b> · Son iş: ${lastLabel(r)}</span></div>
         </div>
       </div>`;
     }).join('');
